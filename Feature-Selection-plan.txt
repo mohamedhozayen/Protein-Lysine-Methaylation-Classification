@@ -1,0 +1,83 @@
+Feature selection Plan
+
+	1. include a step-by-step feature selection plan.
+	2. include current progress
+	3. Please feel free to add 
+
+Objective:
+	the least number of independent features from each others
+	Output is dependent on selected features
+
+Steps:
+	1. use filter/wrapper methods to eliminate (Mohamed will prepare this code and report on it)
+		for wrapper, bootstrapping needs to be implemented. see links at the end of the file
+	2. Use dimension reduction after elimination
+	3. Try mixing features (log, scale, square, ...) exhausting...
+
+Python sklearn library list:
+https://scikit-learn.org/stable/modules/classes.html#module-sklearn.feature_selection
+
+Filter method:
+	- basic
+	- ex. pearson, spareman, kendall correlation
+	- feature_selection.SelectKBest
+	- feature_selection.SelectFdr
+	- 	- feature_selection.f_classif (ANOVA analysis of variance)
+
+Wrapper method
+	- uses model performance and iterate!!
+	- backward elimination, recursive!
+	- feature_selection.RFE (recursive)
+	- feature_selection.RFECV(recursive selection and cross-validation selection)
+	For this method:
+		we need to specify how we are estimating true error
+			- bootstrapping (has large variance for small sample -> not in our case)
+			- bootstrapping - LOO (slide 35, 36 accuracy-slides)
+			- choose n as size of smallest class (slide 37 accuracy-slides)
+			*** Select ‘simplest’ classifier within 1σ (s.d.) of minimum observed error ***
+			- sklearn.utils.resample (bootstrapping library)
+			
+	Two times bootstrapping was mentioned in class
+		one for estimate true error, the other for comparing classifiers 	
+		
+Embedded method
+	- ex. Lass regularization (ranks feature importance)!!
+
+Dimension reduction:
+	- ICA -- (sklearn.decomposition.IncrementalPCA)
+	- PCA -- Principle component analysis (quick runtime)
+	- Kernal PCA (from sklearn.decomposition import PCA, KernelPCA)
+	- UMAP (fair runtime)
+	- t-SNE (fair runtime)
+	- multicoreTSNE (claim signficant better performance than t-SNE) -- (fair runtime)
+
+from sklearn.manifold import TSNE, LocallyLinearEmbedding, Isomap, MDS, SpectralEmbedding
+from umap import UMAP
+
+Examples
+
+Bootstapping with DT
+https://machinelearningmastery.com/calculate-bootstrap-confidence-intervals-machine-learning-results-python/
+https://machinelearningmastery.com/a-gentle-introduction-to-the-bootstrap-method/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
