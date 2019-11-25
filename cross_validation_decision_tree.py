@@ -10,15 +10,14 @@ from sklearn import *
 from pandas_ml import ConfusionMatrix
 
 # Import data
-df = pd.read_csv("csv_result-Descriptors_Training.csv")
-
+df = pd.concat([pd.read_csv("csv_result-Descriptors_Training.csv"), pd.read_csv("csv_result-Descriptors_Calibration.csv")], axis=0, ignore_index=True)
 # Split into train and test
 X = df.drop(['class'], axis=1)
 y = df['class']
 # X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3, random_state = 10)
 
 # Cross validate:
-kf = KFold(n_splits=5, shuffle = True, random_state = 123)
+kf = KFold(n_splits=5, shuffle = True, random_state = 12)
 kf.get_n_splits(X)
 y_true = []
 y_pred = []
