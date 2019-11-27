@@ -10,7 +10,7 @@ from sklearn.metrics import *
 df = pd.read_csv("csv_result-Descriptors_Training.csv")
 
 # Split into train and test
-X = df.drop(['class'], axis=1)
+X = df.drop(['id', 'class'], axis=1)
 Y = df['class']
 X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3, random_state = 1)
 

@@ -23,7 +23,7 @@ df[:].fillna(0, inplace=True)
 # plt.show()
 
 # Split into train and test
-X = df.drop(['class'], axis=1)
+X = df.drop(['id', 'class'], axis=1)
 Y = df['class']
 df_pca['class'] = df['class']
 
@@ -41,26 +41,35 @@ tsne_results = tsne.fit_transform(X)
 
 df['tsne-2d-one'] = tsne_results[:,0]
 df['tsne-2d-two'] = tsne_results[:,1]
-plt.figure(figsize=(16,7))
-ax1 = plt.subplot(1, 2, 1)
-sns.scatterplot(
-    x="pca-one", y="pca-two",
-    hue="class",
-    palette=sns.color_palette("hls", 2),
-    data=df_pca,
-    legend="full",
-    alpha=0.6,
-    ax=ax1
-)
-ax2 = plt.subplot(1, 2, 2)
+# plt.figure(figsize=(16,7))
+# ax1 = plt.subplot(1, 2, 1)
+# sns.scatterplot(
+#     x="pca-one", y="pca-two",
+#     hue="class",
+#     palette=sns.color_palette("hls", 2),
+#     data=df_pca,
+#     legend="full",
+#     alpha=0.6,
+#     ax=ax1
+# )
+# ax2 = plt.subplot(1, 2, 2)
+# sns.scatterplot(
+#     x="tsne-2d-one", y="tsne-2d-two",
+#     hue="class",
+#     palette=sns.color_palette("hls", 2),
+#     data=df,
+#     legend="full",
+#     alpha=0.3,
+#     ax=ax2
+# )
+
 sns.scatterplot(
     x="tsne-2d-one", y="tsne-2d-two",
     hue="class",
     palette=sns.color_palette("hls", 2),
     data=df,
     legend="full",
-    alpha=0.3,
-    ax=ax2
+    alpha=0.5
 )
 plt.show()
 # # X_temp =  pd.DataFrame(VarianceThreshold(threshold=(.8 * (1 - .8))).fit_transform(X, y))

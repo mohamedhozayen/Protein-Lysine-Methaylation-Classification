@@ -12,7 +12,7 @@ from pandas_ml import ConfusionMatrix
 # Import data
 df = pd.concat([pd.read_csv("csv_result-Descriptors_Training.csv"), pd.read_csv("csv_result-Descriptors_Calibration.csv")], axis=0, ignore_index=True)
 # Split into train and test
-X = df.drop(['class'], axis=1)
+X = df.drop(['id', 'class'], axis=1)
 y = df['class']
 # X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3, random_state = 10)
 
