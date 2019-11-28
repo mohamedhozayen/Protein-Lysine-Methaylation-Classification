@@ -56,6 +56,9 @@ preprocess_negative_stats_after = preprocess_negative.describe()
 # DONT LOOK BEYOND HERE :)
 # =============================================================================
 
+#preprocess_negative.describe().to_csv('neg-stat-after.csv')
+#preprocess_negative.describe().to_csv('neg-stat-before.csv')
+
 
 #from sklearn.impute import SimpleImputer
 #import numpy as np
