@@ -1,0 +1,65 @@
+Decision Tree Trained on Unbalanced Data:
+TN = 17554
+FP = 1307
+FN = 1017
+TP = 110
+Pr = 0.0776287932251235
+Re = 0.09760425909494233
+Confusion Matrix: 
+[[17554  1307]
+ [ 1017   110]]
+
+Decision Tree Trained on SMOTE Data:
+TN = 17199
+FP = 1662
+FN = 987
+TP = 140
+Pr = 0.07769145394006659
+Re = 0.12422360248447205
+Confusion Matrix: 
+[[17199  1662]
+ [  987   140]]
+
+Decision Tree Trained on UnderSampled Data:
+TN = 10183
+FP = 8678
+FN = 558
+TP = 569
+Pr = 0.06153347031469666
+Re = 0.5048802129547472
+Confusion Matrix: 
+[[10183  8678]
+ [  558   569]]
+
+Decision Tree Trained on Oversampled Data:
+TN = 17660
+FP = 1201
+FN = 1018
+TP = 109
+Pr = 0.083206106870229
+Re = 0.09671694764862467
+Confusion Matrix: 
+[[17660  1201]
+ [ 1018   109]]
+
+Decision Tree Trained on ClusterCentroids Data:
+TN = 2036
+FP = 16825
+FN = 137
+TP = 990
+Pr = 0.055571147909065394
+Re = 0.878438331854481
+Confusion Matrix: 
+[[ 2036 16825]
+ [  137   990]]
+
+Random Classifier:
+TN = 17739
+FP = 1122
+FN = 1058
+TP = 69
+Pr = 0.05793450881612091
+Re = 0.061224489795918366
+Confusion Matrix: 
+[[17739  1122]
+ [ 1058    69]]
