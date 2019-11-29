@@ -13,44 +13,72 @@ import math
 import scipy.stats as stats
 
 """
-    under development...
+    Demo:
+        
+    import numpy as np
+    import pandas as pd
+    import preprocessing as prc
+        
+    train = pd.read_csv('csv_result-Descriptors_Training.csv', sep=',') 
+    train = train.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
     
-    replace outliers with -1. 
-    outliers outside mean +/- 1.5*iqr
-    use imputation to replace -1
- 
+    # clone negative class - for testing purposes
+    preprocess_negative = train[train['class'] == 0]
+    
+    # clone positive class - for testing purposes
+    preprocess_positive = train[train['class'] == 1]
+    
+    preprocess_negative = prc.detect_outlier_iterative_IQR(preprocess_negative)
+    preprocess_negative = preprocess_negative.dropna(thresh=20) #keep rows with at least 20 non-missing values
+    
+    preprocess_positive = prc.detect_outlier_iterative_IQR(preprocess_positive)
+    preprocess_positive = preprocess_positive.dropna(thresh=20) #keep rows with at least 20 non-missing values
+
+"""
+
+
+
+"""
+    Iterative IQR Outlier Detection
+    
+    apply median +/- 1.5*IQR until no significant detection
+    
+    assume last columns is class type
+    
     return new df
 """
-def handle_outlier(og_df):
-    from sklearn.impute import SimpleImputer
-    imp = SimpleImputer(missing_values=-1, strategy='mean')
+def detect_outlier_iterative_IQR(og_df, cutoff_ratio = 1.07):
+#    from sklearn.impute import SimpleImputer
+#    imp = SimpleImputer(missing_values=-1, strategy='mean')
     df = og_df.copy()
-    stat = df.describe()
-    for column in df.columns:
-    #    for element in t_feature[column]:
-        median = stat[column]['50%']
-        min25 = stat[column]['25%']
-        max75 = stat[column]['75%']
-        mean = stat[column]['mean']
-        std = stat[column]['std']
-        iqr = (max75-min25)*1.5
-        max_val = stat[column]['max']
-        min_val = stat[column]['min']
-        upper_bound = mean + 1.5*iqr
-        lower_bound = mean - 1.5*iqr
-        df[column].mask(df[column] > upper_bound, -1)
-        df[column].mask(df[column] < lower_bound, -1)
+    df_prev = pd.DataFrame({'' : []})
+    n1 = 1.0
+    while True:
+        stat = df.describe()
+        df_prev = df.copy()
+        for column in df.iloc[:, :-1]:
+            median, min25, max75 = stat[column]['50%'], stat[column]['25%'], stat[column]['75%']
+            iqr = abs(max75-min25)*1.5
+            upper_bound = median + iqr
+            lower_bound = median - iqr
+            df[column] = df[column].mask(df[column] > upper_bound, np.nan)
+            df[column] = df[column].mask(df[column] < lower_bound, np.nan)
+        n2 = df.isnull().sum().sum()
+        r = n2/n1
+        n1 = n2*1.0
+        if r < cutoff_ratio:
+            break
+    return df_prev
 
-    return df
 
 """
     cut threshold for extreme values by droping a the corrosponding sample
-    
+    assume last columns is class type
     return new dataframe 
 """
 def cut_threshold(og_df, t):
     df = og_df.copy()
-    for column in df.columns:
+    for column in df.iloc[:, :-1]:
         i_high = df[df[column] > t].index
         i_low = df[df[column] < -t].index
         df.drop(i_high, inplace=True)
