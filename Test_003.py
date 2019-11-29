@@ -38,14 +38,14 @@ train_class = inTrainData['class']
 
 inTestData = pd.read_csv('csv_result-Descriptors_Calibration.csv', sep=',') 
 inTestData = inTestData.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
-inTestData = prc.detect_outlier_iterative_IQR(inTestData).fillna(0)
+inTestData = prc.detect_outlier_iterative_IQR(inTestData).dropna()
 # Split into data and class
 test_data = inTestData.drop(['class'], axis=1)
 test_class = inTestData['class']
 
 
 # configure bootstrap
-n_iterations = 200;
+n_iterations = 10;
 n_size = int(len(train_data) * 0.5) #0.5
 
 
@@ -66,24 +66,22 @@ kf = StratifiedKFold(n_splits=5, shuffle = True)
 kf.get_n_splits(train_data)
 
 
-for i in range(1, 20):
-	# for j in range (1,10):
-	class_true = []
-	class_pred = []
-	class_prob = []
-	for train_index, test_index in kf.split(train_data, train_class):
-		# Train and test model  
-		dt = DecisionTreeClassifier(max_depth = i, class_weight = {1: 5, 0: 1}, max_leaf_nodes=100)
-		this_train_data, this_test_data= train_data.iloc[train_index], train_data.iloc[test_index]
-		this_train_class, this_test_class = train_class.iloc[train_index], train_class.iloc[test_index]
-		dt.fit(this_train_data, this_train_class)
+class_true = []
+class_pred = []
+class_prob = []
+for train_index, test_index in kf.split(train_data, train_class):
+	# Train and test model  
+	dt = DecisionTreeClassifier(max_depth = 8, class_weight = {1: 5, 0: 1}, max_leaf_nodes=100)
+	this_train_data, this_test_data= train_data.iloc[train_index], train_data.iloc[test_index]
+	this_train_class, this_test_class = train_class.iloc[train_index], train_class.iloc[test_index]
+	dt.fit(this_train_data, this_train_class)
 
-		class_true.extend(this_test_class)
-		class_pred.extend(dt.predict(this_test_data).tolist())
-		class_prob.extend(dt.predict_proba(this_test_data)[::,1])
+	class_true.extend(this_test_class)
+	class_pred.extend(dt.predict(this_test_data).tolist())
+	class_prob.extend(dt.predict_proba(this_test_data)[::,1])
 
-	precision, recall, thresholds = sklm.precision_recall_curve(class_true, class_prob)
-	average_precision = sklm.average_precision_score(class_true, class_prob)
+precision, recall, thresholds = sklm.precision_recall_curve(class_true, class_prob)
+average_precision = sklm.average_precision_score(class_true, class_prob)
 # **** END INSERT MODEL HERE ************************************************************
 # **** END INSERT MODEL HERE ************************************************************
     
@@ -127,24 +125,23 @@ for b_iter in range(n_iterations):
     kf.get_n_splits(b_train_data)
     
     
-    for i in range(1, 20):
-    	# for j in range (1,10):
-    	class_true = []
-    	class_pred = []
-    	class_prob = []
-    	for train_index, test_index in kf.split(b_train_data, b_train_class):
-    		# Train and test model  
-    		dt = DecisionTreeClassifier(max_depth = i, class_weight = {1: 5, 0: 1}, max_leaf_nodes=100)
-    		this_train_data, this_test_data= b_train_data.iloc[train_index], b_train_data.iloc[test_index]
-    		this_train_class, this_test_class = b_train_class.iloc[train_index], b_train_class.iloc[test_index]
-    		dt.fit(this_train_data, this_train_class)
-    
-    		class_true.extend(this_test_class)
-    		class_pred.extend(dt.predict(this_test_data).tolist())
-    		class_prob.extend(dt.predict_proba(this_test_data)[::,1])
-    
-    	precision, recall, thresholds = sklm.precision_recall_curve(class_true, class_prob)
-    	average_precision = sklm.average_precision_score(class_true, class_prob)
+    # for j in range (1,10):
+    class_true = []
+    class_pred = []
+    class_prob = []
+    for train_index, test_index in kf.split(b_train_data, b_train_class):
+    	# Train and test model  
+    	dt = DecisionTreeClassifier(max_depth =  8, class_weight = {1: 5, 0: 1}, max_leaf_nodes=100)
+    	this_train_data, this_test_data= b_train_data.iloc[train_index], b_train_data.iloc[test_index]
+    	this_train_class, this_test_class = b_train_class.iloc[train_index], b_train_class.iloc[test_index]
+    	dt.fit(this_train_data, this_train_class)
+
+    	class_true.extend(this_test_class)
+    	class_pred.extend(dt.predict(this_test_data).tolist())
+    	class_prob.extend(dt.predict_proba(this_test_data)[::,1])
+
+    precision, recall, thresholds = sklm.precision_recall_curve(class_true, class_prob)
+    average_precision = sklm.average_precision_score(class_true, class_prob)
 
     # **** END INSERT MODEL HERE ************************************************************
     # **** END INSERT MODEL HERE ************************************************************
