@@ -31,7 +31,15 @@ df = pd.read_csv('csv_result-Descriptors_Training.csv', sep=',')
 df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
 df_norm = prc.normalize(df) #normalize
-df_stand = prc.normalize(df)
+df_stand = prc.standarize(df)
+
+
+        x = df.iloc[:, :-1].values
+        x_scaled = sc.fit_transform(x)
+        new_df = pd.DataFrame(x_scaled)
+        new_df.columns = df.iloc[:, :-1].columns
+        pd.concat([new_df, df.iloc[:,-1]], axis=1)
+
 
 features = df_stand.iloc[:,:-1]
 target= df_stand.iloc[:,-1]

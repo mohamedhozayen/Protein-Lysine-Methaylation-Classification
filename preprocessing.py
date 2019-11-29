@@ -62,6 +62,9 @@ def standarize(df):
     x_scaled = sc.fit_transform(x)
     new_df = pd.DataFrame(x_scaled)
     new_df.columns = df.columns
+    if new_df.columns[-1]=='class': #adjust class
+        new_df.iloc[:,-1] = new_df.iloc[:,-1].mask(new_df.iloc[:,-1] > sc.mean_[-1], 1)
+        new_df.iloc[:,-1] = new_df.iloc[:,-1].mask(new_df.iloc[:,-1] < sc.mean_[-1], 0)
     return new_df
     
 """
