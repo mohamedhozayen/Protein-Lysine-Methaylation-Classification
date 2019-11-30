@@ -36,7 +36,19 @@ df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
 df = prc.standarize(df) #normalize
 
-fs.pca_linear(df, n_c=1) #n_c=1or2
+pca = fs.pca_linear(df, n_c=2, pos_only=False) 
+
+# return all features with at least thershold 
+# no selection below 1 !!!
+fs_vairance = fs.variance_threshold(df, threshold=1)
+fs_vairance = pd.concat([fs_vairance, df['class']], axis=1)
+
+
+pca, df_pca = fs.pca_linear(df, n_c=9, pos_only=False)
+df_pca.to_csv('fs-pca-9.csv')
+
+pca_pca, df_pca_pca = fs.pca_linear(df_pca, n_c=2, pos_only=True, plot=True) 
+
 
 """
     do kernel pca 
@@ -48,6 +60,14 @@ fs.pca_linear(df, n_c=1) #n_c=1or2
 # DONT LOOK BEYOND HERE :)
 # =============================================================================
 """
+
+pca.explained_variance_
+pca.explained_variance_ratio_
+pca.explained_variance_ratio_.cumsum()
+
+
+fs_vairance.to_csv('fs-variance-threshold.csv')
+
 
 features = df_norm.iloc[:,:-1]
 target= df_norm.iloc[:,-1]
