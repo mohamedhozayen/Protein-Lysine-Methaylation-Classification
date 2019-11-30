@@ -31,7 +31,8 @@ start_time = time.time()
 # load datasets
 inTrainData = pd.read_csv('csv_result-Descriptors_Training.csv', sep=',') 
 inTrainData = inTrainData.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
-inTrainData = prc.detect_outlier_iterative_IQR(inTrainData).fillna(0)
+inTrainData = prc.detect_outlier_iterative_IQR(inTrainData).dropna()
+# inTrainData = prc.detect_outlier_iterative_IQR(inTrainData).fillna(0)
 # Split into data and class
 train_data = inTrainData.drop(['class'], axis=1)
 train_class = inTrainData['class']
@@ -39,6 +40,7 @@ train_class = inTrainData['class']
 inTestData = pd.read_csv('csv_result-Descriptors_Calibration.csv', sep=',') 
 inTestData = inTestData.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 inTestData = prc.detect_outlier_iterative_IQR(inTestData).dropna()
+# inTestData = prc.detect_outlier_iterative_IQR(inTestData).fillna(0)
 # Split into data and class
 test_data = inTestData.drop(['class'], axis=1)
 test_class = inTestData['class']
