@@ -33,14 +33,6 @@ df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
 df_norm = prc.normalize(df) #normalize
 df_stand = prc.standarize(df)
 
-
-        x = df.iloc[:, :-1].values
-        x_scaled = sc.fit_transform(x)
-        new_df = pd.DataFrame(x_scaled)
-        new_df.columns = df.iloc[:, :-1].columns
-        pd.concat([new_df, df.iloc[:,-1]], axis=1)
-
-
 features = df_stand.iloc[:,:-1]
 target= df_stand.iloc[:,-1]
 
@@ -64,6 +56,11 @@ pearson = fs.corr_linear(features, target, 'pearson')
 # DONT LOOK BEYOND HERE :)
 # =============================================================================
 """
+
+f_anova.to_csv('f_anova-scores.csv')
+pearson.to_csv('pearson-ranking.csv')
+spearman.to_csv('spearman-ranking.csv')
+
 Pb_NO_sideR35_S	14
 Z3_NO_UCR_S	    19
 Z3_NO_UCR_N1	20
