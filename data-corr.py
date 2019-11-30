@@ -41,3 +41,47 @@ cb = plt.colorbar()
 #cb.ax.tick_params(labelsize=14)
 plt.title('Correlation Matrix - Training - kendall', fontsize=12, y=1.2);
 plt.savefig(Figures + 'Correlation-Matrix-Training-kendall.pdf')
+
+
+# =============================================================================
+# Heat map
+# =============================================================================
+from sklearn import preprocessing
+data = pd.read_csv('csv_result-Descriptors_Training.csv', sep=',')
+data['class'] = preprocessing.LabelBinarizer().fit(data['class']).transform(data['class'])
+
+plt.figure(figsize=(25,25))
+cor = data.corr()
+import seaborn as sns
+sns_plot = sns.heatmap(cor, annot=True, cmap=plt.cm.Reds)
+plt.show()
+sns_plot.get_figure().savefig(Figures + 'heatmap-pearsons'  + '.pdf')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
