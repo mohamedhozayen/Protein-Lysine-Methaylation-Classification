@@ -1,19 +1,4 @@
 """
-Created on Wed Nov 27 18:44:07 2019
-
-Data Preprocessing script
-
-@author: mohamedhozayen
-"""
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import math
-import scipy.stats as stats
-import preprocessing as prc
-import feature_selection as fs
-
-"""
 Steps:
     Detect outliers
     handle outliers
@@ -27,35 +12,49 @@ Steps:
             sklearn.feature_selection.RFE
             sklearn.feature_selection.RFECV
 """
-df = pd.read_csv('csv_result-Descriptors_Training.csv', sep=',') 
+from __future__ import print_function
+import time
+import numpy as np
+import pandas as pd
+from sklearn.datasets import fetch_mldata
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+from sklearn.decomposition import PCA, KernelPCA
+from sklearn.datasets import make_circles
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import seaborn as sns
+
+import preprocessing as prc
+import feature_selection as fs
+
+
+df = pd.read_csv('Files\csv_result-Descriptors_Training.csv', sep=',') 
 df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
-df_norm = prc.normalize(df) #normalize
-df_stand = prc.standarize(df)
+df = prc.standarize(df) #normalize
 
-features = df_stand.iloc[:,:-1]
-target= df_stand.iloc[:,-1]
+fs.pca_linear(df, n_c=1) #n_c=1or2
 
-from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
-f_anova = fs.select_k_best(features, target, f_classif, 28)
+"""
+    do kernel pca 
+"""
 
-spearman = fs.corr_linear(features, target, 'spearman')   
-pearson = fs.corr_linear(features, target, 'pearson')   
-
-#
-#from scipy.stats import spearmanr
-#rho, pval = spearmanr(sh2_d['Q3'], sh2_d['CC'])
-
-
-#train.corr(method='kendall').to_csv(Files + 'Raw-Matrix-Training-kendall.csv')
-#train.corr(method='spearman').to_csv(Files + 'Raw-Matrix-Training-spearman.csv')
-#train.corr(method='pearson').to_csv(Files + 'Raw-Matrix-Training-pearson.csv')
 
 
 # =============================================================================
 # DONT LOOK BEYOND HERE :)
 # =============================================================================
 """
+
+features = df_norm.iloc[:,:-1]
+target= df_norm.iloc[:,-1]
+
+from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
+f_anova = fs.select_k_best(features, target, f_classif, 7)
+df = df_norm[f_anova.iloc[:,0].append(pd.Series('class'))] #
 
 f_anova.to_csv('f_anova-scores.csv')
 pearson.to_csv('pearson-ranking.csv')
