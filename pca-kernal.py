@@ -28,8 +28,13 @@ df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
 df = prc.standarize(df) #normalize
 
-X = df.drop(['class'], axis=1)
-y = df['class']
+# return all features with at least thershold 
+# no selection below 1 !!!
+fs_vairance = fs.variance_threshold(df, threshold=1)
+fs_vairance = pd.concat([fs_vairance, df['class']], axis=1)
+
+X = fs_vairance.drop(['class'], axis=1)
+y = fs_vairance['class']
 
 kpca = KernelPCA(kernel="rbf", fit_inverse_transform=True, gamma=10)
 X_kpca = kpca.fit_transform(X)

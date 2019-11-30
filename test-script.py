@@ -4,6 +4,7 @@ Steps:
     handle outliers
     Normalization/standarization
     Unsupervised techniques
+        variance threshold
         PCA 
     Balance data
     Supervised techniques
@@ -52,6 +53,9 @@ pca_pca, df_pca_pca = fs.pca_linear(df_pca, n_c=2, pos_only=True, plot=True)
 
 """
     do kernel pca 
+    run with all data -> ask ben, gpu
+    run with fs_variance
+    run with pca-9
 """
 
 
