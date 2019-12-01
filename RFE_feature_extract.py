@@ -23,9 +23,9 @@ def report(name, y_true, y_pred, y_prob):
 	print("Pr = " + str(cm[1][1]/(cm[1][1] + cm[0][1])))
 	print("Re = " + str(cm[1][1]/(cm[1][1] + cm[1][0])))
 	print("Confusion Matrix: \n" + str(cm))
+	print('Pr@Re50 = ', PrecisionAtRe50_DT)
 	print()
 
-	print('Pr@Re50 = ', PrecisionAtRe50_DT)
 	plt.plot(recall, precision,label="Pr@Re>50 = {0:.5f}".format(PrecisionAtRe50_DT))
 
 def test_model(model, X_train, X_test, y_train):
