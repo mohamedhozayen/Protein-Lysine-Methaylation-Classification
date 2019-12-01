@@ -3,10 +3,14 @@ Steps:
     Detect outliers
     handle outliers
     Normalization/standarization
+    
     Unsupervised techniques
         variance threshold
         PCA 
+        PCA-Kernal
+        
     Balance data
+    
     Supervised techniques
         Filter 
         Wrapper
@@ -15,7 +19,7 @@ Steps:
     
     Meta learning
     Test using imbalance set
-    
+
 """
 from __future__ import print_function
 import time
@@ -257,5 +261,45 @@ from sklearn.preprocessing import Imputer
 imputer = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
 imputer = imputer.fit(X[:, 1:3])
 X[:, 1:3] = imputer.transform(X[:, 1:3])
+
+
+
+    #print(pca_comp)
+    if n_c == 1:
+        df_pca['pca-2'] = 0
+        df_pca['pca-2'] = df_pca['class'][df_pca['class']==1]
+        df_pca['pca-2'] = df_pca['pca-2'].fillna(0)
+    
+    if plot:
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        
+        if pos_only:
+            df_pca.drop(df_pca[df_pca['class']==0].index, inplace=True)
+            plt.figure(figsize=(16,7))
+            ax1 = plt.subplot(1, 2, 1)
+            sns.scatterplot(
+                    x="pca-1", y="pca-2",
+                    palette=sns.color_palette("hls", 2),
+                    data=df_pca,
+                    legend="full",
+                    alpha=0.6,
+                    ax=ax1
+                    )
+        else:
+    
+            plt.figure(figsize=(16,7))
+            ax1 = plt.subplot(1, 2, 1)
+            sns.scatterplot(
+                    x="pca-1", y="pca-2",
+                    hue="class",
+                    palette=sns.color_palette("hls", 2),
+                    data=df_pca,
+                    legend="full",
+                    alpha=0.6,
+                    ax=ax1
+                    )
+            
+        
 
 """

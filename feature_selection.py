@@ -12,8 +12,7 @@ https://stackabuse.com/applying-wrapper-methods-in-python-for-feature-selection/
 import pandas as pd
 from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif, VarianceThreshold
 from sklearn.decomposition import PCA, KernelPCA, IncrementalPCA
-
-
+from sklearn.manifold import TSNE
 
 """
 method = 
@@ -73,8 +72,9 @@ def pca_incremental(df, n_c=7):
 def variance_threshold(data, threshold=0.5):
     selector = VarianceThreshold(threshold)
     selector.fit(data)
-    return data[data.columns[selector.get_support(indices=True)]]
-    
+    vt = data[data.columns[selector.get_support(indices=True)]]
+    vt = pd.concat([vt, data['class']], axis=1)
+    return vt
     
 
 """
@@ -84,59 +84,58 @@ def variance_threshold(data, threshold=0.5):
     n_c = 1 or 2
     
 """
-def pca_linear(df, n_c=2, pos_only=False, plot = False):
+def pca_linear(df, n=2):
     X = df.drop(['class'], axis=1)
+
+    pca = PCA(n_components = n)
+    pca_result = pca.fit_transform(X)
     
     columns = []
-    for i in range(1, n_c+1):
+    for i in range(1, len(pca_result[0])+1):
         columns.append('pca-'+str(i))
-    
-    pca = PCA(n_components=n_c)
-    pca_result = pca.fit_transform(X)
-    df_pca = pd.DataFrame(data = pca_result
-                 , columns = columns)
-    
-    print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
-    
+    df_pca = pd.DataFrame(data = pca_result, columns = columns)  
     df_pca = pd.concat([df_pca, df['class']], axis=1)
-    #print(pca_comp)
-    if n_c == 1:
-        df_pca['pca-2'] = 0
-        df_pca['pca-2'] = df_pca['class'][df_pca['class']==1]
-        df_pca['pca-2'] = df_pca['pca-2'].fillna(0)
+    return df_pca
     
-    if plot:
-        import matplotlib.pyplot as plt
-        import seaborn as sns
-        
-        if pos_only:
-            df_pca.drop(df_pca[df_pca['class']==0].index, inplace=True)
-            plt.figure(figsize=(16,7))
-            ax1 = plt.subplot(1, 2, 1)
-            sns.scatterplot(
-                    x="pca-1", y="pca-2",
-                    palette=sns.color_palette("hls", 2),
-                    data=df_pca,
-                    legend="full",
-                    alpha=0.6,
-                    ax=ax1
-                    )
-        else:
+#kernel : “linear” | “poly” | “rbf” | “sigmoid” | “cosine” | “precomputed”
+def pca_kernel(df, kernel='rbf'):
+    X = df.drop(['class'], axis=1)
+   
+    kpca = KernelPCA(kernel=kernel, gamma=10)
+    X_kpca = kpca.fit_transform(X)
+    X_back = kpca.inverse_transform(X_kpca)
     
-            plt.figure(figsize=(16,7))
-            ax1 = plt.subplot(1, 2, 1)
-            sns.scatterplot(
-                    x="pca-1", y="pca-2",
-                    hue="class",
-                    palette=sns.color_palette("hls", 2),
-                    data=df_pca,
-                    legend="full",
-                    alpha=0.6,
-                    ax=ax1
-                    )
+    columns = []
+    for i in range(1, len(X_back[0])+1):
+        columns.append('pca-'+ kernel +str(i))
+    X_back = pd.DataFrame(data = X_back, columns = columns)
+    new = pd.concat([X_back, df['class']], axis=1)
+    return new
 
-
-    return pca, df_pca
+    
+def tsne(df, n=2):
+    X = df.drop(['class'], axis=1)
+    tsne = TSNE(n_components=n, verbose=1, perplexity=40, n_iter=300)
+    tsne_results = tsne.fit_transform(X)
+    
+    columns = []
+    for i in range(1, len(tsne_results[0])+1):
+        columns.append('tsne-' + str(i))
+    df_tsne = pd.DataFrame(data = tsne_results, columns = columns)
+    df_tsne = pd.concat([df_tsne, df['class']], axis=1)
+    return df_tsne
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

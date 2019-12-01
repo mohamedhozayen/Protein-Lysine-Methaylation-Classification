@@ -1,4 +1,5 @@
 # pip3 install imblearn
+# pip install -U imbalanced-learn (conda command)
 
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
@@ -20,9 +21,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
-#from imblearn.over_sampling import SMOTE
-#from imblearn.over_sampling import RandomOverSampler
-#from imblearn.under_sampling import *
+from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import *
 from sklearn import preprocessing
 import preprocessing as prc
 import feature_selection as fs
