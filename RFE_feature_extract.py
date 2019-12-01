@@ -26,8 +26,8 @@ def report(name, y_true, y_pred, y_prob):
 	print("Confusion Matrix: \n" + str(cm))
 	print('Pr@Re50 = ', PrecisionAtRe50_DT)
 	print()
-
-	plt.plot(recall, precision,label="Pr@Re>50 = {0:.5f}".format(PrecisionAtRe50_DT))
+	plt.plot(recall, precision,label=name+" Pr@Re>50 = {0:.5f}".format(PrecisionAtRe50_DT))
+	return PrecisionAtRe50_DT
 
 def test_model(model, X_train, X_test, y_train):
 	model.fit(X_train, y_train)
