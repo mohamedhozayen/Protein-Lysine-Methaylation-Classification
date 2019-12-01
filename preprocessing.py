@@ -84,6 +84,8 @@ def normalize(df):
 """
 def handle_outlier(og_df):
     df = og_df.copy()
+    #drop samples with missing values > 10 
+    df = df.dropna(thresh=20)
     stat = df.describe()
     for column in df.iloc[:, :-1]:
         median = stat[column]['50%']

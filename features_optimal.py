@@ -30,17 +30,16 @@ df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
 df = prc.standarize(df) # or normalize
 
-summary = []
-summary_balance = []
-
-vt = fs.variance_threshold(df, threshold=1)
-rslt_vt = main.test_tree_depth(vt, class_weight="balanced")
-summary_balance.append(['variance-threshold', rslt_vt.index(max(rslt_vt)), max(rslt_vt)])
+#summary = []
+#summary_balance = []
 
 pca_rbf = fs.pca_kernel(df, kernel='rbf')
 pca_poly = fs.pca_kernel(df, kernel='poly') 
 pca_cos = fs.pca_kernel(df, kernel='cosine')
 
+pca_rbf.to_csv('pca-rbf-features.csv')
+pca_poly.to_csv('pca-poly-features.csv')
+pca_cos.to_csv('pca-cos-features.csv')
 
 #summary_table_balance = pd.DataFrame(summary_balance)
 #summary_table_balance.columns = ['method-balance', 'optimal tree depth', 'pre@recall50']
@@ -48,6 +47,10 @@ pca_cos = fs.pca_kernel(df, kernel='cosine')
 
 
 """
+vt = fs.variance_threshold(df, threshold=1)
+rslt_vt = main.test_tree_depth(vt, class_weight="balanced")
+summary_balance.append(['variance-threshold', rslt_vt.index(max(rslt_vt)), max(rslt_vt)])
+
 pca = fs.pca_linear(df, n=2) # n_c9 is 9, based VarianceThreshold results, axis to gain most information
 rslt_pca = main.test_tree_depth(pca, class_weight="balanced")
 summary_balance.append(['pca-2', rslt_pca.index(max(rslt_pca)), max(rslt_pca)])
@@ -93,20 +96,3 @@ rslt_kernel = main.test_tree_depth(pca_kernel, class_weight="balanced")
 summary_balance.append(['cosine-', rslt_kernel.index(max(rslt_kernel)), max(rslt_kernel)])
 
 """
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
