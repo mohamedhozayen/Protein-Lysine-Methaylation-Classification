@@ -20,9 +20,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
-from imblearn.over_sampling import SMOTE
-from imblearn.over_sampling import RandomOverSampler
-from imblearn.under_sampling import *
+#from imblearn.over_sampling import SMOTE
+#from imblearn.over_sampling import RandomOverSampler
+#from imblearn.under_sampling import *
 from sklearn import preprocessing
 import preprocessing as prc
 import feature_selection as fs
@@ -46,7 +46,7 @@ def report(y_true, y_pred, y_prob, name):
 treeDepth = 2
 # generate 2 class dataset
 # Import data
-df = pd.read_csv('csv_result-Descriptors_Training.csv', sep=',') 
+df = pd.read_csv('Files\csv_result-Descriptors_Training.csv', sep=',') 
 df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 # df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
 
