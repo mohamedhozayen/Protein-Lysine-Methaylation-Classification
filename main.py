@@ -73,7 +73,23 @@ def eval_bs(bs_stats, apparent_stat, hold_out_stat, verbose = False):
 
     return bs_632, mean, std
 
-
+def bootstrap_test(name, model, X, y):
+    test_stat = list()
+    n_size = int(X.count()[0] * 0.5)
+    all_index = [j for j in range(len(X))]
+    for i in range(bootstrap_test_count):
+        # Wipe out training from last itteration:
+        model = clone(model)
+        # Create bootstrap sub-sample
+        X_b_train, y_b_train, b_idx = resample(X, y, all_index, n_samples=n_size, stratify=y, random_state = rand_state+i)
+        test_idx = np.array([x for x in all_index if x not in b_idx])
+        
+        X_b_test = X.values[test_idx,:];
+        y_b_test = y.values[test_idx];
+        # Fit a model and send it to 
+        pred, prob = test_model(model, X_b_train, X_b_test, y_b_train)
+        test_stat.append(report(name + ", bs sample " + str(i), y_b_test, pred, prob))
+    return test_stat
 
 # Main function
 # Inputs: model - will be trained and validated using k-fold
@@ -87,11 +103,9 @@ def main(df, name, model, unsupervise_fs = False, bs_estimate = False, verbose=F
     y = df['class']
 
     if bs_estimate:
-        test_stat = list()
         # Take out a holdout sample for the entire test
         X, X_holdout, y, y_holdout = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
 
-        n_size = int(X.count()[0] * 0.5)
         # Run a simple test to get optimistic apparent score
         X_ap, X_test, y_ap, y_test = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
         # Calc the apparent stat
@@ -99,19 +113,7 @@ def main(df, name, model, unsupervise_fs = False, bs_estimate = False, verbose=F
         apparent_stat = report(name + ", apparent stat", y_test, pred, prob)
 
         # Run bootstrapping
-        all_index = [j for j in range(len(X))]
-        for i in range(bootstrap_test_count):
-            # Wipe out training from last itteration:
-            model = clone(model)
-            # Create bootstrap sub-sample
-            X_b_train, y_b_train, b_idx = resample(X, y, all_index, n_samples=n_size, stratify=y, random_state = rand_state+i)
-            test_idx = np.array([x for x in all_index if x not in b_idx])
-            
-            X_b_test = X.values[test_idx,:];
-            y_b_test = y.values[test_idx];
-            # Fit a model and send it to 
-            pred, prob = test_model(model, X_b_train, X_b_test, y_b_train)
-            test_stat.append(report(name + ", bs sample " + str(i), y_b_test, pred, prob))
+        test_stat = bootstrap_test(name, model, X, y)
 
         # Train on all X, y and test against the holdout test. 
         model = clone(model)
@@ -174,11 +176,21 @@ def run_bs_dt():
     df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
     df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
     df = prc.standarize(df) # or normalize
-    dt = DecisionTreeClassifier(max_depth = 4)
+    dt = DecisionTreeClassifier(max_depth = 4, class_weight = {1: 20, 0:1})
     print(main(df, "Decision Tree", dt, bs_estimate = True, verbose=True))
 
+
+def run_bs_adaboost():
+    df = pd.read_csv('Files/csv_result-Descriptors_Training.csv', sep=',') 
+    df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
+    df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
+    df = prc.standarize(df) # or normalize
+    dt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1, class_weight = {1: 20, 0:1}), n_estimators=20)
+    print(main(df, "AdaBoost", dt, bs_estimate = True, verbose=True))
+
 # run_depth_test()
-run_bs_dt()
+# run_bs_dt()
+run_bs_adaboost()
 
 
 # Test meta learning example
