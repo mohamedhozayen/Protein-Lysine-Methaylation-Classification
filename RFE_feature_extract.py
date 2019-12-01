@@ -16,6 +16,7 @@ def report(name, y_true, y_pred, y_prob):
 	precision, recall, thresholds = precision_recall_curve( y_true, y_prob)
 	average_precision = average_precision_score(y_true, y_prob)
 	PrecisionAtRe50_DT = np.max(precision[recall>=0.5])
+	print("=========== " + name + " ===========")
 	print("TN = " + str(cm[0][0]))
 	print("FP = " + str(cm[0][1]))
 	print("FN = " + str(cm[1][0]))
@@ -30,8 +31,8 @@ def report(name, y_true, y_pred, y_prob):
 
 def test_model(model, X_train, X_test, y_train):
 	model.fit(X_train, y_train)
-	y_pred = dt_rfe.predict(X_test_rfe)
-	y_prob = dt_rfe.predict_proba(X_test_rfe)[::,1]
+	y_pred = model.predict(X_test)
+	y_prob = model.predict_proba(X_test)[::,1]
 	return y_pred, y_prob
 
 
@@ -46,6 +47,7 @@ y = df['class']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 1, stratify=y)
 
 # Do RFE
+dt_rfe = DecisionTreeClassifier(max_depth=4)
 rfe = RFE(dt_rfe, 7)
 X_train_rfe = rfe.fit_transform(X_train,y_train)
 X_test_rfe = rfe.transform(X_test)
@@ -54,14 +56,13 @@ print(rfe.ranking_)
 print()
 
 # Train and test classifier with RFE
-dt_rfe = DecisionTreeClassifier(max_depth=4)
-y_pred, y_prob = test_model(dt_rfe, X_train_rfe, y_train, X_test_rfe)
-report("RFE: ", y_test, y_pred, y_prob)
+y_pred_rfe, y_prob_rfe = test_model(dt_rfe, X_train_rfe, X_test_rfe, y_train)
+report("RFE Top 7", y_test, y_pred_rfe, y_prob_rfe)
 
 # Train and test classifier without RFE
 dt = DecisionTreeClassifier(max_depth=4)
-y_pred, y_prob = test_model(dt_rfe, X_train_rfe, y_train, X_test_rfe)
-report("RFE: ", y_test, dt.predict(X_test), dt.predict_proba(X_test)[::,1])
+y_pred, y_prob = test_model(dt, X_train, X_test, y_train)
+report("All Features", y_test, y_pred, y_prob)
 
 # Display PR Curve
 plt.legend(loc=1)
