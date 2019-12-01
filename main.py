@@ -18,6 +18,7 @@ from sklearn.model_selection import *
 from sklearn.tree import * 
 from sklearn.metrics import * 
 from sklearn.feature_selection import *
+from sklearn.ensemble import AdaBoostClassifier
 from datetime import datetime
 ################################
 startTime = datetime.now()
@@ -30,6 +31,7 @@ def report(name, y_true, y_pred, y_prob):
 	precision, recall, thresholds = precision_recall_curve( y_true, y_prob)
 	average_precision = average_precision_score(y_true, y_prob)
 	PrecisionAtRe50_DT = np.max(precision[recall>=0.5])
+	print("===== " + name +"=====")
 	print("TN = " + str(cm[0][0]))
 	print("FP = " + str(cm[0][1]))
 	print("FN = " + str(cm[1][0]))
@@ -109,4 +111,12 @@ plt.plot(list(rslt.keys()), list(rslt.values()))
 plt.ylabel("Depth of Tree")
 plt.xlabel("Pr@Re>50")
 plt.title("Testing Decision Tree Depth")
+plt.show()
+
+# Test meta learning example
+abc = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), n_estimators=100)
+main("AdaBoost Decision Stumps", abc)
+# Print PR Curves from test
+plt.legend(loc=1)
+plt.title("Precision Recall Curve")
 plt.show()
