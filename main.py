@@ -18,23 +18,25 @@ from sklearn.model_selection import *
 from sklearn.tree import * 
 from sklearn.metrics import * 
 from sklearn.feature_selection import *
+from sklearn.utils import *
+from sklearn.base import *
 from sklearn.ensemble import AdaBoostClassifier
 from datetime import datetime
 ################################
 startTime = datetime.now()
-bootstrap_test_count = 10
+bootstrap_test_count = 100
 rand_state = randint(0, 100)
 ################################
 
 # Report will plot a PR curve and return the test stat
-def report(name, y_true, y_pred, y_prob, verbos=False):
+def report(name, y_true, y_pred, y_prob, verbose=False):
 
     cm = confusion_matrix(y_true, y_pred)
     precision, recall, thresholds = precision_recall_curve(y_true, y_prob)
     average_precision = average_precision_score(y_true, y_prob)
     PrecisionAtRe50_DT = np.max(precision[recall>0.5])
     
-    if verbos:
+    if verbose:
         print("===== " + name +"=====")
         print("TN = " + str(cm[0][0]))
         print("FP = " + str(cm[0][1]))
@@ -57,30 +59,83 @@ def test_model(model, X_train, X_test, y_train):
 	y_prob = model.predict_proba(X_test)[::,1]
 	return y_pred, y_prob
 
+def eval_bs(bs_stats, apparent_stat, hold_out_stat, verbose = False):
+    mean = np.mean(bs_stats)
+    std  = np.std(bs_stats)
+    bs_632 = 0.632*mean + 0.368*apparent_stat
+    if verbose:
+        print("===== Bootstrapping Results =====")
+        print('Bootstrapping Estimate = ', mean)
+        print('              With Std = ', std)
+        print('Apparent Estimate = ', apparent_stat)
+        print('Holdout Estimate = ', hold_out_stat)
+        print('0.632 Bootstrapping Estimate = ', bs_632)
+
+    return bs_632, mean, std
+
+
+
 # Main function
 # Inputs: model - will be trained and validated using k-fold
 # [optional] clean_data or unsupervise_fs
-def main(df, name, model, unsupervise_fs = False):
+def main(df, name, model, unsupervise_fs = False, bs_estimate = False, verbose=False):
+    # Don't train on ID, BEN!
     if 'id' in df:
         df = df.drop(['id'], axis=1)
+    # Split X and y 
     X = df.drop(['class'], axis=1)
     y = df['class']
-	
-    y_pred = []
-    y_prob = []
-    y_true = []
-    kf = StratifiedKFold(n_splits=5, shuffle = True, random_state = rand_state)
-    for train_index, test_index in kf.split(X, y):
-		# Split train and test set
-        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-		# Train and test model  
-        pred, prob = test_model(model, X_train, X_test, y_train)
-        y_pred.extend(pred)
-        y_prob.extend(prob)
-        y_true.extend(y_test)
 
-    return report(name, y_true, y_pred, y_prob)
+    if bs_estimate:
+        test_stat = list()
+        # Take out a holdout sample for the entire test
+        X, X_holdout, y, y_holdout = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
+
+        n_size = int(X.count()[0] * 0.5)
+        # Run a simple test to get optimistic apparent score
+        X_ap, X_test, y_ap, y_test = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
+        # Calc the apparent stat
+        pred, prob = test_model(model, X_ap, X_test, y_ap)
+        apparent_stat = report(name + ", apparent stat", y_test, pred, prob)
+
+        # Run bootstrapping
+        all_index = [j for j in range(len(X))]
+        for i in range(bootstrap_test_count):
+            # Wipe out training from last itteration:
+            model = clone(model)
+            # Create bootstrap sub-sample
+            X_b_train, y_b_train, b_idx = resample(X, y, all_index, n_samples=n_size, stratify=y, random_state = rand_state+i)
+            test_idx = np.array([x for x in all_index if x not in b_idx])
+            
+            X_b_test = X.values[test_idx,:];
+            y_b_test = y.values[test_idx];
+            # Fit a model and send it to 
+            pred, prob = test_model(model, X_b_train, X_b_test, y_b_train)
+            test_stat.append(report(name + ", bs sample " + str(i), y_b_test, pred, prob))
+
+        # Train on all X, y and test against the holdout test. 
+        model = clone(model)
+        pred, prob = test_model(model, X, X_holdout, y)
+        holdout_stat = report(name + ", holdout", y_holdout, pred, prob)
+
+        return eval_bs(test_stat, apparent_stat, holdout_stat, verbose=verbose)
+
+    else:
+        y_pred = []
+        y_prob = []
+        y_true = []
+        kf = StratifiedKFold(n_splits=5, shuffle = True, random_state = rand_state)
+        for train_index, test_index in kf.split(X, y):
+            # Split train and test set
+            X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+            y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+            # Train and test model  
+            pred, prob = test_model(model, X_train, X_test, y_train)
+            y_pred.extend(pred)
+            y_prob.extend(prob)
+            y_true.extend(y_test)
+
+    return report(name, y_true, y_pred, y_prob, verbose=verbose)
 
 # Evaluates the depth of the tree
 def test_tree_depth(data, class_weight=None):
@@ -90,27 +145,41 @@ def test_tree_depth(data, class_weight=None):
         test_stats.append(main(df=data, name="DT with depth = "+str(i), model=dt))
     return test_stats
 
+
 # Run the tree depth test
-#df = pd.read_csv('Files\csv_result-Descriptors_Training.csv', sep=',') 
-#df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
-#df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
-#df = prc.standarize(df) # or normalize
-#rslt = test_tree_depth(df)
+def run_depth_test():
+    df = pd.read_csv('Files/csv_result-Descriptors_Training.csv', sep=',') 
+    df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
+    df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
+    df = prc.standarize(df) # or normalize
+    rslt = test_tree_depth(df)
 
-#print("Run Time: " + str(datetime.now() - startTime))
+    print("Run Time: " + str(datetime.now() - startTime))
 
-# Print PR Curves from test
-#plt.legend(loc=1)
-#plt.title("Precision Recall Curve")
-#plt.show()
+    # Print PR Curves from test
+    plt.legend(loc=1)
+    plt.title("Precision Recall Curve")
+    plt.show()
 
-# Print out the distribution of curves 
-#plt.plot(list(range(2, len(rslt))), rslt[2:])
-#plt.ylabel("Depth of Tree")
-#plt.xlabel("Pr@Re>50")
-#plt.title("Testing Decision Tree Depth")
-#plt.xticks(list(range(2, len(rslt))))
-#plt.show()
+    # Print out the distribution of curves 
+    plt.plot(list(range(2, len(rslt))), rslt[2:])
+    plt.ylabel("Depth of Tree")
+    plt.xlabel("Pr@Re>50")
+    plt.title("Testing Decision Tree Depth")
+    plt.xticks(list(range(2, len(rslt))))
+    plt.show()
+
+def run_bs_dt():
+    df = pd.read_csv('Files/csv_result-Descriptors_Training.csv', sep=',') 
+    df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
+    df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df).dropna(thresh=20))
+    df = prc.standarize(df) # or normalize
+    dt = DecisionTreeClassifier(max_depth = 4)
+    print(main(df, "Decision Tree", dt, bs_estimate = True, verbose=True))
+
+# run_depth_test()
+run_bs_dt()
+
 
 # Test meta learning example
 #abc = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), n_estimators=100)
