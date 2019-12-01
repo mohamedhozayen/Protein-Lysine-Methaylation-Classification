@@ -12,6 +12,10 @@ Steps:
         Wrapper
             sklearn.feature_selection.RFE
             sklearn.feature_selection.RFECV
+    
+    Meta learning
+    Test using imbalance set
+    
 """
 from __future__ import print_function
 import time
