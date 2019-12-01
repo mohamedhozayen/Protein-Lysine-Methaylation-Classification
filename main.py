@@ -83,10 +83,10 @@ def main(df, name, model, unsupervise_fs = False):
     return report(name, y_true, y_pred, y_prob)
 
 # Evaluates the depth of the tree
-def test_tree_depth(data):
+def test_tree_depth(data, class_weight=None):
     test_stats = [0,0]
     for i in range(2, 16): # 2 to 15
-        dt = DecisionTreeClassifier(max_depth = i)
+        dt = DecisionTreeClassifier(max_depth = i, class_weight=class_weight)
         test_stats.append(main(df=data, name="DT with depth = "+str(i), model=dt))
     return test_stats
 

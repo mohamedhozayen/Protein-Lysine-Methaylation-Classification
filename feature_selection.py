@@ -101,7 +101,7 @@ def pca_linear(df, n=2):
 def pca_kernel(df, kernel='rbf'):
     X = df.drop(['class'], axis=1)
    
-    kpca = KernelPCA(kernel=kernel, gamma=10)
+    kpca = KernelPCA(kernel=kernel, fit_inverse_transform=True, gamma=10)
     X_kpca = kpca.fit_transform(X)
     X_back = kpca.inverse_transform(X_kpca)
     
