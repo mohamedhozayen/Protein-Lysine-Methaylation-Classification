@@ -30,23 +30,51 @@ df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df))
 df = prc.standarize(df) # or normalize
 
+"""
+Spearman
+Pearson
+
+ANOVA
+
+RFE
+RFECV
+"""
+pca_rbf = pd.read_csv('Files\pca-rbf-features.csv', sep=',') 
+pca_poly = pd.read_csv('Files\pca-poly-features.csv', sep=',') 
+pca_cos = pd.read_csv('Files\pca-cos-features.csv', sep=',') 
+pca_10 = pd.read_csv('Files\pca-10-features.csv', sep=',') 
+
+header=0
+
+sub_optimal = [pca_rbf, pca_cos, pca_poly, pca_10]
+
+fs.RFE_DT(pca_rbf)
+
+rslt_vt = main.test_tree_depth(vt, class_weight="balanced")
+summary_balance.append(['variance-threshold', rslt_vt.index(max(rslt_vt)), max(rslt_vt)])
+
+
+
+
+"""
 #summary = []
 #summary_balance = []
-
-pca_rbf = fs.pca_kernel(df, kernel='rbf')
-pca_poly = fs.pca_kernel(df, kernel='poly') 
-pca_cos = fs.pca_kernel(df, kernel='cosine')
-
-pca_rbf.to_csv('pca-rbf-features.csv')
-pca_poly.to_csv('pca-poly-features.csv')
-pca_cos.to_csv('pca-cos-features.csv')
 
 #summary_table_balance = pd.DataFrame(summary_balance)
 #summary_table_balance.columns = ['method-balance', 'optimal tree depth', 'pre@recall50']
 #summary_table_balance.to_csv('unsupervised-features-balance-summary_table.csv')
 
+pca_rbf = fs.pca_kernel(df, kernel='rbf')
+pca_poly = fs.pca_kernel(df, kernel='poly') 
+pca_cos = fs.pca_kernel(df, kernel='cosine')
+pca_10= fs.pca_linear(df, n=10)
 
-"""
+pca_10.to_csv('pca-10-features.csv')
+pca_rbf.to_csv('pca-rbf-features.csv')
+pca_poly.to_csv('pca-poly-features.csv')
+pca_cos.to_csv('pca-cos-features.csv')
+
+
 vt = fs.variance_threshold(df, threshold=1)
 rslt_vt = main.test_tree_depth(vt, class_weight="balanced")
 summary_balance.append(['variance-threshold', rslt_vt.index(max(rslt_vt)), max(rslt_vt)])

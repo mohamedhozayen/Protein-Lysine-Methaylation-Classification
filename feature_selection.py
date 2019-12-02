@@ -10,9 +10,11 @@ https://stackabuse.com/applying-wrapper-methods-in-python-for-feature-selection/
 @author: mohamedhozayen
 """
 import pandas as pd
-from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif, VarianceThreshold
+from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif, VarianceThreshold, RFE, RFECV
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.decomposition import PCA, KernelPCA, IncrementalPCA
 from sklearn.manifold import TSNE
+from sklearn.tree import *
 
 """
 method = 
@@ -25,8 +27,9 @@ f_classif
             3. The population standard deviations of the groups are all equal. This
             property is known as homoscedasticity.
 """
-def select_k_best(features, target, method, k=10):
-    
+def select_k_best(df, method='f_classif', k=10):
+    features = df.drop(['class'], axis=1)
+    target = df['class']
     selector = SelectKBest(method, k)
     selector.fit_transform(features, target)
     scores = selector.scores_
@@ -36,9 +39,8 @@ def select_k_best(features, target, method, k=10):
     columns = features.columns
     for bool, feature in zip(mask, columns):
         if bool:
-            new_features.append([feature, 
-                                round(scores[columns.get_loc(feature)])])
-    
+            new_features.append([feature, round(scores[columns.get_loc(feature)])])
+
     new_features = pd.DataFrame(new_features)
     new_features.columns = ['feature', 'score']
     new_features = new_features.sort_values(by=['score'], ascending = False)
@@ -46,18 +48,46 @@ def select_k_best(features, target, method, k=10):
 
 
 
-def  corr_linear(features, target, method='spearman'):   
-    l = []
+def  corr_linear(df, method='spearman'):
+    features = df.drop(['class'], axis=1)
+    target = df['class']
+    c = []
     for column in features:
-        l.append([column, features[column].corr(target, method)])
+        c.append([column, features[column].corr(target, method)])
 
-    scores = pd.DataFrame(l)
+    scores = pd.DataFrame(c)
     scores.columns = ['feature', 'score']
     scores = scores.sort_values(by=['score'], ascending = False)
     return scores
 
 
-    
+def RFE_DT(df, test_size=0.3, n_features=7, max_depth=4):
+    X = df.drop(['class'], axis=1)
+    y = df['class']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size, random_state = 1, stratify=y)
+    dt_rfe = DecisionTreeClassifier(max_depth=max_depth)
+    rfe = RFE(dt_rfe, n_features)
+    X_train_rfe = rfe.fit_transform(X_train,y_train)
+    X_test_rfe = rfe.transform(X_test)
+ 
+    columns = X.columns
+    rank = pd.DataFrame({'feature': columns, 'rank': list(rfe.ranking_)})
+    rank = rank.sort_values(by=['rank'], ascending = True)
+    return rank
+
+def RFECV_DT(df, test_size=0.3, cv=5, min_features_to_select=7, max_depth=4):
+    X = df.drop(['class'], axis=1)
+    y = df['class']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size, random_state = 1, stratify=y)
+    dt_rfecv = DecisionTreeClassifier(max_depth=max_depth)
+    rfecv = RFECV(dt_rfecv, min_features_to_select=min_features_to_select, cv=StratifiedKFold(cv))
+    X_train_rfecv = rfecv.fit_transform(X_train,y_train)
+    X_test_rfecv = rfecv.transform(X_test)
+ 
+    columns = X.columns
+    rank = pd.DataFrame({'feature': columns, 'rank': list(rfecv.ranking_)})
+    rank = rank.sort_values(by=['rank'], ascending = True)
+    return rank
 
 def pca_incremental(df, n_c=7):
     X = df.drop(['class'], axis=1)
