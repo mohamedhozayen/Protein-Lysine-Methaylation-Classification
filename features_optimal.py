@@ -15,7 +15,8 @@ import pandas as pd
 import preprocessing as prc
 import feature_selection as fs
 import main, old_main
-
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # optional: use to vote for best depth - insanity!!
 def main_best_n(data, n): 
@@ -24,28 +25,6 @@ def main_best_n(data, n):
         rslt = main.test_tree_depth(data)
         l.append([rslt.index(max(rslt)), max(rslt)])
     return l
-
-df = pd.read_csv('Files\csv_result-Descriptors_Training.csv', sep=',') 
-df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
-df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df))
-df = prc.standarize(df) # or normalize
-
-pca_rbf = pd.read_csv('Files\pca-rbf-features.csv', sep=',').drop(['id'], axis=1) 
-pca_poly = pd.read_csv('Files\pca-poly-features.csv', sep=',').drop(['id'], axis=1) 
-pca_cos = pd.read_csv('Files\pca-cos-features.csv', sep=',').drop(['id'], axis=1) 
-pca_10 = pd.read_csv('Files\pca-10-features.csv', sep=',').drop(['id'], axis=1) 
-
-summary_balance = []
-
-summary_balance.extend(evaluate_corr(pca_rbf, 'pca_rbf', n_features=10, max_dapth=7))
-summary_balance.extend(evaluate_corr(pca_cos, 'pca_cos', n_features=10, max_dapth=7))
-summary_balance.extend(evaluate_corr(pca_poly, 'pca_poly', n_features=10, max_dapth=7))
-summary_balance.extend(evaluate_corr(pca_10, 'pca_10', n_features=10, max_dapth=7))
-
-summary_table_balance = pd.DataFrame(summary_balance)
-summary_table_balance.columns = ['method-balance', 'n_features', 'optimal-depth', 'pre@recall50']
-summary_table_balance.to_csv('supervised-features-balance-summary_table.csv') 
-
 def evaluate_corr(data, data_str_name, n_features, max_dapth):
     """
     Spearman Pearson ANOVA RFECV (ignore RFE)
@@ -80,9 +59,86 @@ def evaluate_corr(data, data_str_name, n_features, max_dapth):
     return summary_balance
 
 
+df = pd.read_csv('Files\csv_result-Descriptors_Training.csv', sep=',') 
+df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
+df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df))
+df = prc.standarize(df) # or normalize
+
+pca_rbf = pd.read_csv('Files\pca-rbf-features.csv', sep=',').drop(['id'], axis=1) 
+pca_poly = pd.read_csv('Files\pca-poly-features.csv', sep=',').drop(['id'], axis=1) 
+pca_cos = pd.read_csv('Files\pca-cos-features.csv', sep=',').drop(['id'], axis=1) 
+pca_10 = pd.read_csv('Files\pca-10-features.csv', sep=',').drop(['id'], axis=1) 
+
+summary_balance = []
+
+summary_table_balance = pd.DataFrame(summary_balance)
+summary_table_balance.columns = ['method-balance', 'n_features', 'optimal-depth', 'pre@recall50']
+summary_table_balance = summary_table_balance.sort_values(by=['pre@recall50'], ascending = False)
+summary_table_balance.to_csv('supervised-features-balance-summary_table.csv') 
+
+depth_2 = summary_table_balance[summary_table_balance['optimal-depth']==2]
+depth_3 = summary_table_balance[summary_table_balance['optimal-depth']==3]
+depth_4 = summary_table_balance[summary_table_balance['optimal-depth']==4]
+depth_5 = summary_table_balance[summary_table_balance['optimal-depth']==5]
+depth_6 = summary_table_balance[summary_table_balance['optimal-depth']==6]
+depth_7 = summary_table_balance[summary_table_balance['optimal-depth']==7]
+
+depth_2.to_csv('depth-2.csv') 
+depth_3.to_csv('depth-3.csv') 
+depth_4.to_csv('depth-4.csv') 
+depth_5.to_csv('depth-5.csv') 
+depth_6.to_csv('depth-6.csv') 
+depth_7.to_csv('depth-7.csv') 
+
+summary_tree = pd.DataFrame()
+
+temp = depth_2[depth_2['pre@recall50'] > 0.075]
+summary_tree = summary_tree.append(temp)
+
+temp = depth_3[depth_3['pre@recall50'] > 0.076]
+summary_tree = summary_tree.append(temp)
+
+temp = depth_4[depth_4['pre@recall50'] > 0.076]
+summary_tree = summary_tree.append(temp)
+
+temp = depth_5[depth_5['pre@recall50'] > 0.076]
+summary_tree = summary_tree.append(temp)
+
+temp = depth_6[depth_6['pre@recall50'] > 0.076]
+summary_tree = summary_tree.append(temp)
+
+temp = depth_7[depth_7['pre@recall50'] > 0.076]
+summary_tree = summary_tree.append(temp)
+
+
+summary_tree.to_csv('performance-optimal-summary-trees.csv') 
+
+
+optimal_features = fs.RFECV_DT(pca_cos, min_features_to_select=4, max_depth=4)
+optimal_features.to_csv('optimal_features_pca_cos.csv') 
 
 
 """
+summary_balance = []
+
+summary_table_balance = pd.DataFrame(summary_balance)
+summary_table_balance.columns = ['method-balance', 'n_features', 'optimal-depth', 'pre@recall50']
+summary_table_balance = summary_table_balance.sort_values(by=['pre@recall50'], ascending = False)
+summary_table_balance.to_csv('supervised-features-balance-summary_table.csv') 
+
+depth_2 = summary_table_balance[summary_table_balance['optimal-depth']==2]
+depth_3 = summary_table_balance[summary_table_balance['optimal-depth']==3]
+depth_4 = summary_table_balance[summary_table_balance['optimal-depth']==4]
+depth_5 = summary_table_balance[summary_table_balance['optimal-depth']==5]
+depth_6 = summary_table_balance[summary_table_balance['optimal-depth']==6]
+depth_7 = summary_table_balance[summary_table_balance['optimal-depth']==7]
+
+summary_balance.extend(evaluate_corr(pca_rbf, 'pca_rbf', n_features=10, max_dapth=7))
+summary_balance.extend(evaluate_corr(pca_cos, 'pca_cos', n_features=10, max_dapth=7))
+summary_balance.extend(evaluate_corr(pca_poly, 'pca_poly', n_features=10, max_dapth=7))
+summary_balance.extend(evaluate_corr(pca_10, 'pca_10', n_features=10, max_dapth=7))
+
+
 #summary = []
 #summary_balance = []
 
@@ -148,5 +204,166 @@ summary_balance.append(['poly-', rslt_kernel.index(max(rslt_kernel)), max(rslt_k
 pca_kernel = fs.pca_kernel(df, kernel='cosine')
 rslt_kernel = main.test_tree_depth(pca_kernel, class_weight="balanced")
 summary_balance.append(['cosine-', rslt_kernel.index(max(rslt_kernel)), max(rslt_kernel)])
+
+plt.figure(figsize=(20,20))
+plt.tight_layout()
+ax1 = plt.subplot(231)
+ax1.title.set_text('Performance: optimal depth of 2')
+ax1.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_2,
+            legend="full",
+            ax=ax1
+)
+
+ax2 = plt.subplot(232)
+ax2.title.set_text('Performance: optimal depth of 3')
+ax2.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_3,
+            legend="full",
+            ax=ax2
+)
+
+ax3 = plt.subplot(233)
+ax3.title.set_text('Performance: optimal depth of 4')
+ax3.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_4,
+            legend="full",
+            ax=ax3
+)
+
+ax4 = plt.subplot(234)
+ax4.title.set_text('Performance: optimal depth of 5')
+ax4.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_5,
+            legend="full",
+            ax=ax4
+)
+
+ax5 = plt.subplot(235)
+ax5.title.set_text('Performance: optimal depth of 6')
+ax5.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_6,
+            legend="full",
+            ax=ax5
+)
+
+ax6 = plt.subplot(236)
+ax6.title.set_text('Performance: optimal depth of 7')
+ax6.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_7,
+            legend="full",
+            ax=ax6
+)
+
+plt.savefig('Files\supervised-features-balance-summary_plot.pdf')
+
+
+# Print out the distribution of curves 
+#plt.plot()
+#plt.ylabel("Depth of Tree")
+#plt.xlabel("Pr@Re>50")
+#plt.title("Testing Decision Tree Depth")
+#plt.xticks(list(range(2, len(rslt))))
+#plt.show()
+
+
+plt.figure(figsize=(25,17))
+ax1 = plt.subplot(231)
+ax1.title.set_text('Performance: optimal depth of 2')
+ax1.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_2,
+            legend="full",
+            ax=ax1
+)
+
+plt.savefig('Files\supervised-features-balance-DT-2.png')
+
+
+plt.figure(figsize=(25,17))
+ax2 = plt.subplot(232)
+ax2.title.set_text('Performance: optimal depth of 3')
+ax2.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_3,
+            legend="full",
+            ax=ax2
+)
+plt.savefig('Files\supervised-features-balance-DT-3.png')
+
+plt.figure(figsize=(25,17))
+ax3 = plt.subplot(233)
+ax3.title.set_text('Performance: optimal depth of 4')
+ax3.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_4,
+            legend="full",
+            ax=ax3
+)
+plt.savefig('Files\supervised-features-balance-DT-4.png')
+
+plt.figure(figsize=(25,17))
+ax4 = plt.subplot(234)
+ax4.title.set_text('Performance: optimal depth of 5')
+ax4.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_5,
+            legend="full",
+            ax=ax4
+)
+plt.savefig('Files\supervised-features-balance-DT-5.png')
+
+plt.figure(figsize=(25,17))
+ax5 = plt.subplot(235)
+ax5.title.set_text('Performance: optimal depth of 6')
+ax5.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_6,
+            legend="full",
+            ax=ax5
+)
+plt.savefig('Files\supervised-features-balance-DT-6.png')
+
+
+plt.figure(figsize=(25,17))
+ax6 = plt.subplot(236)
+ax6.title.set_text('Performance: optimal depth of 7')
+ax6.legend(loc="best")
+sns.scatterplot(
+            x="n_features", y="pre@recall50",
+            hue="method-balance",
+            data=depth_7,
+            legend="full",
+            ax=ax6
+)
+plt.savefig('Files\supervised-features-balance-DT-7.png')
 
 """
