@@ -25,6 +25,7 @@ features = pca_cos_features[['pca-cosine13', 'pca-cosine18', 'pca-cosine15', 'pc
 print("--- %s seconds ---" % (time.time() - start_time))
 
 """
-Features to use : features
-max depth : 4
+Decision Tree parameters:
+    Features to use : features
+    max depth : 4
 """

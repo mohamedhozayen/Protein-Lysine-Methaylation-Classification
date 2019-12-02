@@ -155,7 +155,10 @@ def pca_linear(df, n=2):
 """    
 
 def pca_kernel(df, kernel='rbf'):
-    X = df.drop(['class'], axis=1)
+    if 'class' in df:
+        X = df.drop(['class'], axis=1)
+    else:
+        X = df
    
     kpca = KernelPCA(kernel=kernel, fit_inverse_transform=True, gamma=10)
     X_kpca = kpca.fit_transform(X)
@@ -165,7 +168,12 @@ def pca_kernel(df, kernel='rbf'):
     for i in range(1, len(X_back[0])+1):
         columns.append('pca-'+ kernel +str(i))
     X_back = pd.DataFrame(data = X_back, columns = columns)
-    new = pd.concat([X_back, df['class']], axis=1)
+    
+    if 'class' in df:
+        new = pd.concat([X_back, df['class']], axis=1)
+    else:
+        new = X_back
+    
     return new
 
 """
