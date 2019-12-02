@@ -54,13 +54,18 @@ def evaluate_corr(data, data_str_name, n_features, max_dapth):
     
     pearson = fs.corr_linear(data, method='pearson')
     spearman = fs.corr_linear(data, method='spearman')
-
+    p_class = pearson['class']
+    s_class = spearman['class']
+    
     for i in range(1, n_features+1):
-        pearson = pd.concat([pearson.iloc[:,0:i], pearson['class']], axis=1)
+
+        pearson = pearson.drop(['class'], axis=1)
+        pearson = pd.concat([pearson.iloc[:,0:i], p_class], axis=1)
         out = old_main.test_tree_depth(pearson, class_weight="balanced")
         summary_balance.append([data_str_name + '-pearson' , i, out.index(max(out)), max(out)])
         
-        spearman = pd.concat([spearman.iloc[:,0:i], spearman['class']], axis=1)
+        spearman = spearman.drop(['class'], axis=1)
+        spearman = pd.concat([spearman.iloc[:,0:i], s_class], axis=1)
         out = old_main.test_tree_depth(spearman, class_weight="balanced")
         summary_balance.append([data_str_name + '-spearman', i, out.index(max(out)), max(out)])
         
@@ -71,7 +76,7 @@ def evaluate_corr(data, data_str_name, n_features, max_dapth):
         df = fs.RFECV_DT(data, min_features_to_select=n_features, max_depth=max_dapth)
         out = old_main.test_tree_depth(df, class_weight="balanced")
         summary_balance.append([data_str_name + '-RFECV', i,  out.index(max(out)), max(out)])
-    
+
     return summary_balance
 
 
