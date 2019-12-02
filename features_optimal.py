@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import preprocessing as prc
 import feature_selection as fs
-import main
+import main, old_main
 
 
 # optional: use to vote for best depth - insanity!!
@@ -30,6 +30,11 @@ df = df.drop(['id'], axis=1).replace(['P', 'N'], [1, 0])
 df = prc.handle_outlier(prc.detect_outlier_iterative_IQR(df))
 df = prc.standarize(df) # or normalize
 
+pca_rbf = pd.read_csv('Files\pca-rbf-features.csv', sep=',').drop(['id'], axis=1) 
+pca_poly = pd.read_csv('Files\pca-poly-features.csv', sep=',').drop(['id'], axis=1) 
+pca_cos = pd.read_csv('Files\pca-cos-features.csv', sep=',').drop(['id'], axis=1) 
+pca_10 = pd.read_csv('Files\pca-10-features.csv', sep=',').drop(['id'], axis=1) 
+
 """
 Spearman
 Pearson
@@ -39,19 +44,42 @@ ANOVA
 RFE
 RFECV
 """
-pca_rbf = pd.read_csv('Files\pca-rbf-features.csv', sep=',') 
-pca_poly = pd.read_csv('Files\pca-poly-features.csv', sep=',') 
-pca_cos = pd.read_csv('Files\pca-cos-features.csv', sep=',') 
-pca_10 = pd.read_csv('Files\pca-10-features.csv', sep=',') 
 
-header=0
+summary_balance = []
 
-sub_optimal = [pca_rbf, pca_cos, pca_poly, pca_10]
+summary_balance.extend(evaluate_corr(pca_rbf, 'pca_rbf'))
+summary_balance.extend(evaluate_corr(pca_cos, 'pca_cos'))
+summary_balance.extend(evaluate_corr(pca_poly, 'pca_poly'))
+summary_balance.extend(evaluate_corr(pca_10, 'pca_10', n_features=10, max_dapth=6))
 
-fs.RFE_DT(pca_rbf)
+summary_table_balance = pd.DataFrame(summary_balance)
+summary_table_balance.columns = ['method-balance', 'n_features', 'optimal tree depth', 'pre@recall50']
+summary_table_balance.to_csv('supervised-features-balance-summary_table.csv') 
 
-rslt_vt = main.test_tree_depth(vt, class_weight="balanced")
-summary_balance.append(['variance-threshold', rslt_vt.index(max(rslt_vt)), max(rslt_vt)])
+def evaluate_corr(data, data_str_name, n_features, max_dapth):
+    summary_balance = []
+    
+    pearson = fs.corr_linear(data, method='pearson')
+    spearman = fs.corr_linear(data, method='spearman')
+
+    for i in range(1, n_features+1):
+        pearson = pd.concat([pearson.iloc[:,0:i], pearson['class']], axis=1)
+        out = old_main.test_tree_depth(pearson, class_weight="balanced")
+        summary_balance.append([data_str_name + '-pearson' , i, out.index(max(out)), max(out)])
+        
+        spearman = pd.concat([spearman.iloc[:,0:i], spearman['class']], axis=1)
+        out = old_main.test_tree_depth(spearman, class_weight="balanced")
+        summary_balance.append([data_str_name + '-spearman', i, out.index(max(out)), max(out)])
+        
+        df = fs.select_k_best_ANOVA(data, k=n_features)
+        out = old_main.test_tree_depth(df, class_weight="balanced")
+        summary_balance.append([data_str_name + '-ANOVA', i, out.index(max(out)), max(out)])
+        
+        df = fs.RFECV_DT(data, min_features_to_select=n_features, max_depth=max_dapth)
+        out = old_main.test_tree_depth(df, class_weight="balanced")
+        summary_balance.append([data_str_name + '-RFECV', i,  out.index(max(out)), max(out)])
+    
+    return summary_balance
 
 
 

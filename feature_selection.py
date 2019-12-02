@@ -17,20 +17,25 @@ from sklearn.manifold import TSNE
 from sklearn.tree import *
 
 """
-method = 
-f_classif
-        ANOVA F-value between label/feature for classification tasks.    
+    select_k_best_ANOVA uses f_classif (ANOVA analysis of variance)
+            ANOVA F-value between label/feature for classification tasks.    
+            
+            note that anova assumes:
+                1. The samples are independent
+                2. Each sample is from a normally distributed population
+                3. The population standard deviations of the groups are all equal. This
+                property is known as homoscedasticity.
         
-        note that anova assumes:
-            1. The samples are independent
-            2. Each sample is from a normally distributed population
-            3. The population standard deviations of the groups are all equal. This
-            property is known as homoscedasticity.
+    choose best k features
+    
+    return data with features ranked from highest to lowest score
+
 """
-def select_k_best(df, method='f_classif', k=10):
+def select_k_best_ANOVA(df, k=10):
     features = df.drop(['class'], axis=1)
     target = df['class']
-    selector = SelectKBest(method, k)
+    
+    selector = SelectKBest(f_classif, k)
     selector.fit_transform(features, target)
     scores = selector.scores_
     
@@ -44,10 +49,17 @@ def select_k_best(df, method='f_classif', k=10):
     new_features = pd.DataFrame(new_features)
     new_features.columns = ['feature', 'score']
     new_features = new_features.sort_values(by=['score'], ascending = False)
-    return new_features
+    top_score = df[new_features['feature']]
+    top_score = pd.concat([top_score, df['class']], axis=1)
+    return top_score
 
-
-
+"""
+    corr_linear performs pearson and spearman correlation             
+            note that pearson and spearman assumes:
+                1. The samples are independent
+    
+    return data with features ranked from highest to lowest score
+"""
 def  corr_linear(df, method='spearman'):
     features = df.drop(['class'], axis=1)
     target = df['class']
@@ -57,10 +69,17 @@ def  corr_linear(df, method='spearman'):
 
     scores = pd.DataFrame(c)
     scores.columns = ['feature', 'score']
+    scores['score'] = abs(scores['score'])
     scores = scores.sort_values(by=['score'], ascending = False)
-    return scores
+    top_score = df[scores['feature']]
+    top_score = pd.concat([top_score, df['class']], axis=1)
+    return top_score
 
-
+"""
+    RFE_DT | Recursive feature elimination using dicsion trees
+    
+    return data with ranked features
+"""
 def RFE_DT(df, test_size=0.3, n_features=7, max_depth=4):
     X = df.drop(['class'], axis=1)
     y = df['class']
@@ -73,8 +92,15 @@ def RFE_DT(df, test_size=0.3, n_features=7, max_depth=4):
     columns = X.columns
     rank = pd.DataFrame({'feature': columns, 'rank': list(rfe.ranking_)})
     rank = rank.sort_values(by=['rank'], ascending = True)
-    return rank
+    top_rank = df[rank['feature'][rank['rank']==1]]
+    top_rank = pd.concat([top_rank, df['class']], axis=1)
+    return top_rank
 
+"""
+    RFECV_DT | Recursive feature elimination with cross validation using dicsion trees
+    
+    return data with ranked features
+"""
 def RFECV_DT(df, test_size=0.3, cv=5, min_features_to_select=7, max_depth=4):
     X = df.drop(['class'], axis=1)
     y = df['class']
@@ -87,17 +113,14 @@ def RFECV_DT(df, test_size=0.3, cv=5, min_features_to_select=7, max_depth=4):
     columns = X.columns
     rank = pd.DataFrame({'feature': columns, 'rank': list(rfecv.ranking_)})
     rank = rank.sort_values(by=['rank'], ascending = True)
-    return rank
+    top_rank = df[rank['feature'][rank['rank']==1]]
+    top_rank = pd.concat([top_rank, df['class']], axis=1)
+    return top_rank
 
-def pca_incremental(df, n_c=7):
-    X = df.drop(['class'], axis=1)
-    transformer = IncrementalPCA(n_components=7)
-    X_transformed = transformer.fit_transform(X)
-    return X_transformed
-    
+
 """
-    return all features with at least thershold 
-    no selection below 1 !!!
+    Variance threshold
+    return data with high variance
 """
 def variance_threshold(data, threshold=0.5):
     selector = VarianceThreshold(threshold)
@@ -108,11 +131,8 @@ def variance_threshold(data, threshold=0.5):
     
 
 """
-    PCA one component
-    assume df is standarized
-    include column class in df
-    n_c = 1 or 2
-    
+    PCA linear | Principal Component Analysis 
+    return data with projected features onto new dimension
 """
 def pca_linear(df, n=2):
     X = df.drop(['class'], axis=1)
@@ -126,8 +146,14 @@ def pca_linear(df, n=2):
     df_pca = pd.DataFrame(data = pca_result, columns = columns)  
     df_pca = pd.concat([df_pca, df['class']], axis=1)
     return df_pca
+
+"""
+    PCA kernel |  Principal Component Analysis 
+    kernel : “linear” | “poly” | “rbf” | “sigmoid” | “cosine” | “precomputed”
     
-#kernel : “linear” | “poly” | “rbf” | “sigmoid” | “cosine” | “precomputed”
+    return data with projected features onto new dimension using kernel mode
+"""    
+
 def pca_kernel(df, kernel='rbf'):
     X = df.drop(['class'], axis=1)
    
@@ -142,7 +168,11 @@ def pca_kernel(df, kernel='rbf'):
     new = pd.concat([X_back, df['class']], axis=1)
     return new
 
+"""
+    tSNE | t-distributed Stochastic Neighbor Embedding
     
+    return data with projected features onto new dimension using kernel mode
+"""    
 def tsne(df, n=2):
     X = df.drop(['class'], axis=1)
     tsne = TSNE(n_components=n, verbose=1, perplexity=40, n_iter=300)
@@ -156,24 +186,12 @@ def tsne(df, n=2):
     return df_tsne
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+"""
+    PCA linear for big data otherwise use pca_linear
+    not finished!!
+"""
+def pca_incremental(df, n_c=7):
+    X = df.drop(['class'], axis=1)
+    transformer = IncrementalPCA(n_components=7)
+    X_transformed = transformer.fit_transform(X)
+    return X_transformed    
