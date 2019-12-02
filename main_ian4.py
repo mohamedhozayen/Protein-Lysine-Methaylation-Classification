@@ -28,7 +28,7 @@ from datetime import datetime
 ################################
 startTime = datetime.now()
 bootstrap_test_count = 100
-random.seed(0)
+random.seed(30)
 rand_state = randint(0, bootstrap_test_count)
 
 plot_on = True
@@ -75,12 +75,12 @@ def plot_report(bs_stats, apparent_stat, hold_out_stat):
     plt.hist(bs_stats, 20, label='Bootstrap Precision', edgecolor='black')
     ylim = plt.ylim()
     
-    plt.plot(2 * [apparent_stat], ylim, '-g', linewidth=1, label="Apparent Pr@Re50 = {0:.4f}".format(apparent_stat))
-    plt.plot(2 * [hold_out_stat], ylim, '-r', linewidth=1, label="Holdout Pr@Re50 = {0:.4f}".format(hold_out_stat))
-    plt.plot(2 * [bs_632], ylim, '-m', linewidth=1, label="632 Bootstrap Pr@Re50 = {0:.4f}".format(bs_632))
-    plt.plot(2 * [bs_mean], ylim, '-b', linewidth=1, label="Bootstrap Pr@Re50 = {0:.4f}".format(bs_mean))
-    plt.plot(2 * [bs_mean-bs_std], ylim, '--b', linewidth=1)
-    plt.plot(2 * [bs_mean+bs_std], ylim, '--b', linewidth=1)
+    plt.plot(2 * [apparent_stat], ylim, ':g', linewidth=3, label="Apparent Pr@Re50 = {0:.4f}".format(apparent_stat))
+    plt.plot(2 * [hold_out_stat], ylim, '-.r', linewidth=3, label="Holdout Pr@Re50 = {0:.4f}".format(hold_out_stat))
+    plt.plot(2 * [bs_632], ylim, '-m', linewidth=2, label="632 Bootstrap Pr@Re50 = {0:.4f}".format(bs_632))
+    plt.plot(2 * [bs_mean], ylim, '-b', linewidth=2, label="Bootstrap Pr@Re50 = {0:.4f}".format(bs_mean))
+    plt.plot(2 * [bs_mean-bs_std], ylim, '--b', linewidth=2)
+    plt.plot(2 * [bs_mean+bs_std], ylim, '--b', linewidth=2)
     
     plt.ylim(ylim)
     plt.legend(loc=1)
@@ -168,8 +168,10 @@ def main(df, df_holdout, name, model, unsupervise_fs = False, bs_estimate = Fals
     y_holdout = df_holdout['class']
 
     if bs_estimate:
-#        # Take out a holdout sample for the entire test
-#        X, X_holdout, y, y_holdout = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
+        # Take out a holdout sample for the entire test
+        X = X.append(X_holdout)
+        y = y.append(y_holdout)
+        X, X_holdout, y, y_holdout = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
 
         # Run a simple test to get optimistic apparent score
         pred, prob, trained_model = test_model(model, X, X, y)
