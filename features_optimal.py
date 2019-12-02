@@ -35,28 +35,21 @@ pca_poly = pd.read_csv('Files\pca-poly-features.csv', sep=',').drop(['id'], axis
 pca_cos = pd.read_csv('Files\pca-cos-features.csv', sep=',').drop(['id'], axis=1) 
 pca_10 = pd.read_csv('Files\pca-10-features.csv', sep=',').drop(['id'], axis=1) 
 
-"""
-Spearman
-Pearson
-
-ANOVA
-
-RFE
-RFECV
-"""
-
 summary_balance = []
 
-summary_balance.extend(evaluate_corr(pca_rbf, 'pca_rbf'))
-summary_balance.extend(evaluate_corr(pca_cos, 'pca_cos'))
-summary_balance.extend(evaluate_corr(pca_poly, 'pca_poly'))
-summary_balance.extend(evaluate_corr(pca_10, 'pca_10', n_features=10, max_dapth=6))
+summary_balance.extend(evaluate_corr(pca_rbf, 'pca_rbf', n_features=10, max_dapth=7))
+summary_balance.extend(evaluate_corr(pca_cos, 'pca_cos', n_features=10, max_dapth=7))
+summary_balance.extend(evaluate_corr(pca_poly, 'pca_poly', n_features=10, max_dapth=7))
+summary_balance.extend(evaluate_corr(pca_10, 'pca_10', n_features=10, max_dapth=7))
 
 summary_table_balance = pd.DataFrame(summary_balance)
-summary_table_balance.columns = ['method-balance', 'n_features', 'optimal tree depth', 'pre@recall50']
+summary_table_balance.columns = ['method-balance', 'n_features', 'optimal-depth', 'pre@recall50']
 summary_table_balance.to_csv('supervised-features-balance-summary_table.csv') 
 
 def evaluate_corr(data, data_str_name, n_features, max_dapth):
+    """
+    Spearman Pearson ANOVA RFECV (ignore RFE)
+    """
     summary_balance = []
     
     pearson = fs.corr_linear(data, method='pearson')
