@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 import preprocessing as prc
 import feature_selection as fs
+import random
 from random import seed
 from random import randint
 from sklearn.model_selection import *
@@ -27,7 +28,8 @@ from datetime import datetime
 ################################
 startTime = datetime.now()
 bootstrap_test_count = 100
-#rand_state = randint(0, 100)
+random.seed(0)
+rand_state = randint(0, 100)
 ################################
 
 # Report will plot a PR curve and return the test stat
@@ -132,8 +134,7 @@ def bootstrap_test(name, model, X, y):
         # Wipe out training from last itteration:
         model = clone(model)
         # Create bootstrap sub-sample
-#        X_b_train, y_b_train, b_idx = resample(X, y, all_index, n_samples=n_size, stratify=y, random_state = rand_state+i)
-        X_b_train, y_b_train, b_idx = resample(X, y, all_index, n_samples=n_size, stratify=y)
+        X_b_train, y_b_train, b_idx = resample(X, y, all_index, n_samples=n_size, stratify=y, random_state = rand_state+i)
         test_idx = np.array([x for x in all_index if x not in b_idx])
         
         X_b_test = X.values[test_idx,:];
@@ -156,12 +157,10 @@ def main(df, name, model, unsupervise_fs = False, bs_estimate = False, verbose=F
 
     if bs_estimate:
         # Take out a holdout sample for the entire test
-#        X, X_holdout, y, y_holdout = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
-        X, X_holdout, y, y_holdout = train_test_split(X, y, test_size = 0.2, stratify = y)
+        X, X_holdout, y, y_holdout = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
 
         # Run a simple test to get optimistic apparent score
-#        X_ap, X_test, y_ap, y_test = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
-        X_ap, X_test, y_ap, y_test = train_test_split(X, y, test_size = 0.2, stratify = y)
+        X_ap, X_test, y_ap, y_test = train_test_split(X, y, test_size = 0.2, random_state = rand_state, stratify = y)
         # Calc the apparent stat
         pred, prob, trained_model = test_model(model, X_ap, X_test, y_ap)
 
